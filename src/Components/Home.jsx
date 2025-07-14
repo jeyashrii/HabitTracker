@@ -6,7 +6,7 @@ function Home() {
   const [habitList, setHabitList] = useState([]);
   const [time, setTime] = useState("");
   function createHabit() {
-    setHabitList((prev) => [...prev, { name: habit, time }]);
+    setHabitList((prev) => [...prev, { name: habit, time, completedDays: [] }]);
     setHabit("");
   }
   let year = null;
@@ -45,13 +45,13 @@ function Home() {
           </div>
         </div>
 
-        {habitList.map((habitObj, index) => {
+        {habitList.map((habitObj, habitIndex) => {
           const [yearStr, monthStr] = habitObj.time.split("-");
           year = parseInt(yearStr);
           month = parseInt(monthStr);
           const numDays = getDaysInMonth(month, year);
           return (
-            <div className="habit-container" key={index}>
+            <div className="habit-container" key={habitIndex}>
               <div className="habit-header">
                 <p className="habit-heading">{habitObj.name}</p>
                 <p>{habitObj.time}</p>
@@ -61,8 +61,38 @@ function Home() {
                 <div className="grid-box">
                   {Array(numDays)
                     .fill(0)
-                    .map((item, index) => {
-                      return <div className="grid-day" key={index}></div>;
+                    .map((item, dayIndex) => {
+                      return (
+                        <div
+                          className={`grid-day ${
+                            habitObj.completedDays.includes(dayIndex)
+                              ? "completed"
+                              : ""
+                          }`}
+                          key={dayIndex}
+                          onClick={() =>
+                            setHabitList((prevList) =>
+                              // 🔥 THIS LINE is the fix — returning the result of map()
+                              prevList.map((habit, index) => {
+                                if (index !== habitIndex) return habit;
+
+                                const alreadyDone =
+                                  habit.completedDays.includes(dayIndex);
+                                const updatedDays = alreadyDone
+                                  ? habit.completedDays.filter(
+                                      (d) => d !== dayIndex
+                                    )
+                                  : [...habit.completedDays, dayIndex];
+
+                                return {
+                                  ...habit,
+                                  completedDays: updatedDays,
+                                };
+                              })
+                            )
+                          }
+                        ></div>
+                      );
                     })}
                 </div>
               </div>
