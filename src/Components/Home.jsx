@@ -1,11 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../App.css";
 
 function Home() {
   const [habit, setHabit] = useState("");
   const [habitList, setHabitList] = useState([]);
   const [time, setTime] = useState("");
+  useEffect(() => {
+    const storedItems = localStorage.getItem("habitList");
+    if (storedItems) {
+      const parsed = JSON.parse(storedItems);
+      setHabitList(parsed);
+
+      // set time to first stored habit's time
+      if (parsed.length > 0) {
+        setTime(parsed[0].time);
+      }
+    }
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("habitList", JSON.stringify(habitList));
+    console.log("Saved to storage:", habitList);
+  }, [habitList]);
   function createHabit() {
+    if (!habit.trim() || !time) {
+      alert("please enter a valid time and habit!");
+      return;
+    }
+    const newHabit = { name: habit, time, completedDays: [] };
+    console.log("✅ Creating habit:", newHabit);
     setHabitList((prev) => [...prev, { name: habit, time, completedDays: [] }]);
     setHabit("");
   }
@@ -46,6 +68,8 @@ function Home() {
         </div>
 
         {habitList.map((habitObj, habitIndex) => {
+          if (!habitObj.time || !habitObj.time.includes("-")) return null;
+          console.log("🔁 Rendering habit:", habitObj);
           const [yearStr, monthStr] = habitObj.time.split("-");
           year = parseInt(yearStr);
           month = parseInt(monthStr);
